@@ -111,17 +111,24 @@
     </div>
 
     <!-- Таблици с данни по осеменители -->
-    <div class="section" id="tablesSection">
-      <h3>Данни по осеменители</h3>
-      <div id="workerTablesContainer"></div>
-    </div>
-
-    <!-- Графика -->
     <div class="section">
-      <h3>Графика на успеваемост</h3>
-      <canvas id="successChart"></canvas>
+      <h3>Данни по осеменители</h3>
+      <table id="recordsTable">
+        <thead>
+          <tr>
+            <th>Осеменител</th>
+            <th>Номер на крава</th>
+            <th>Вид</th>
+            <th>Дата</th>
+            <th>Резултат</th>
+            <th>Действия</th>
+          </tr>
+        </thead>
+        <tbody>
+        </tbody>
+      </table>
+      <p id="successRate"></p>
     </div>
-
     <!-- Секция за редакция -->
     <div class="section">
       <h3>Редактиране на записи</h3>
@@ -161,60 +168,261 @@
       </div>
     </div>
 
+    <!-- Графика -->
+    <div class="section">
+      <h3>Графика на успеваемост</h3>
+      <canvas id="successChart"></canvas>
+    </div>
+
   </div> <!-- край на mainContent -->
+
 <script>
-  // Инициализация на Firebase Firestore
+  // Конфигурация на Firebase - замени с твоята конфигурация
+  const firebaseConfig = {
+    apiKey: "ТУК_API_KEY",
+    authDomain: "ТУК_PROJECT_ID.firebaseapp.com",
+    projectId: "ТУК_PROJECT_ID",
+    storageBucket: "ТУК_PROJECT_ID.appspot.com",
+    messagingSenderId: "ТУК_SENDER_ID",
+    appId: "ТУК_APP_ID"
+  };
+
+  // Инициализиране на Firebase
+  firebase.initializeApp(firebaseConfig);
   const db = firebase.firestore();
 
-  // Глобални променливи
+  // Фиксирани потребители за вход
+  const users = {
+    admin: "admin123",
+    user1: "pass1",
+    user2: "pass2"
+  };
+
+  // Елементи
+  const loginSection = document.getElementById("loginSection");
+  const mainContent = document.getElementById("mainContent");
+  const loginError = document.getElementById("loginError");
+
+  // Проверка за вход
+  function checkLogin() {
+    const username = document.getElementById("username").value.trim();
+    const password = document.getElementById("password").value;
+
+    if (users[username] && users[username] === password) {
+      loginSection.classList.add("hidden");
+      mainContent.classList.remove("hidden");
+      loginError.textContent = "";
+      loadData();
+    } else {
+      loginError.textContent = "Грешно потребителско име или парола.";
+    }
+  }
+
   let data = [];
   let chart;
-  const workers = ["Иван Иванов", "Георги Петров", "Мария Димитрова"];
-  
+  const workers = ["ivan", "vasil", "krustyo", "stela"];
+
   const tableBody = document.querySelector("#recordsTable tbody");
   const rateEl = document.getElementById("successRate");
   const recordSelect = document.getElementById("recordSelect");
   const editFormContainer = document.getElementById("editFormContainer");
   const editRecordForm = document.getElementById("editRecordForm");
 
-  // Функция за проверка на вход
-  function checkLogin() {
-    const username = document.getElementById("username").value.trim();
-    const password = document.getElementById("password").value.trim();
-
-    if (username === "admin" && password === "9802") {
-      document.getElementById("loginSection").classList.add("hidden");
-      document.getElementById("mainContent").classList.remove("hidden");
-      loadData();
-    } else {
-      document.getElementById("loginError").textContent = "Грешно потребителско име или парола!";
-    }
-  }
-
-  // Функция за обновяване на таблицата с данни
-  function updateTables() {
-    // Тук имаш нужда от таблица с id="recordsTable" в HTML,
-    // ако я няма, трябва да се добави
-  }
-
-  // Зареждане на данни от Firestore
+  // Зареждане на данни
   function loadData() {
     db.collection("records").get().then(snapshot => {
       data = [];
       snapshot.forEach(doc => {
         data.push({ id: doc.id, ...doc.data() });
       });
-      // Тук трябва да имаш функции updateTables() и updateChart()
       updateTables();
       updateChart();
       populateRecordSelect();
     });
   }
 
-  // Останалата част от кода ти остава същата - добавяне на записи, търсене и редактиране, графика...
+  // Обновяване на таблицата
+  function updateTables() {
+    tableBody.innerHTML = "";
+    let pos = 0, neg = 0;
 
-  // Зареждане на началните данни при стартиране
-  //loadData(); // Извикваме loadData само след успешен вход
+    data.forEach(record => {
+      const row = document.createElement("tr");
+      row.innerHTML = `
+        <td>${record.worker}</td>
+        <td>${record.cowNumber}</td>
+        <td>${record.type}</td>
+        <td>${record.date}</td>
+        <td>${record.result || "Няма данни"}</td>
+        <td></td>
+      `;
+
+      // Бутон изтриване
+      const delBtn = document.createElement("button");
+      delBtn.textContent = "Изтрий";
+      delBtn.classList.add("delete-btn");
+      delBtn.onclick = () => {
+        if (confirm(`Изтриване на запис за крава ${record.cowNumber}?`)) {
+          db.collection("records").doc(record.id).delete()
+            .then(() => loadData());
+        }
+      };
+
+      row.querySelector("td:last-child").appendChild(delBtn);
+      tableBody.appendChild(row);
+
+      if (record.result === "Положителен") pos++;
+      else if (record.result === "Отрицателен") neg++;
+    });
+
+    const total = pos + neg;
+    if (total > 0) {
+      const rate = (pos / total * 100).toFixed(2);
+      rateEl.textContent = `Успеваемост: ${rate}% (${pos} положителни от ${total})`;
+    } else {
+      rateEl.textContent = "Няма данни за успеваемост.";
+    }
+  }
+
+  // Добавяне на нов запис
+  document.getElementById("inseminationForm").addEventListener("submit", e => {
+    e.preventDefault();
+
+    const newRecord = {
+      worker: document.getElementById("worker").value,
+      cowNumber: document.getElementById("cowNumber").value.trim(),
+      type: document.getElementById("type").value.trim(),
+      date: document.getElementById("date").value,
+      result: "Няма данни"
+    };
+
+    db.collection("records").add(newRecord).then(() => {
+      e.target.reset();
+      loadData();
+    });
+  });
+
+  // Търсене по номер на крава
+  document.getElementById("searchForm").addEventListener("submit", e => {
+    e.preventDefault();
+    const searchVal = document.getElementById("searchCow").value.trim();
+    const found = data.find(r => r.cowNumber === searchVal);
+
+    const foundInfo = document.getElementById("foundInfo");
+    const pregnancySection = document.getElementById("pregnancySection");
+    const pregnancyResult = document.getElementById("pregnancyResult");
+
+    if (found) {
+      foundInfo.textContent = `Запис за крава ${found.cowNumber}: Осеменител - ${found.worker}, Вид - ${found.type}, Дата - ${found.date}, Резултат - ${found.result || "Няма данни"}`;
+      pregnancySection.style.display = "block";
+      pregnancyResult.value = found.result || "Няма данни";
+
+      document.getElementById("updateTestBtn").onclick = () => {
+        db.collection("records").doc(found.id).update({
+          result: pregnancyResult.value
+        }).then(() => {
+          alert("Резултатът е обновен.");
+          loadData();
+        });
+      };
+    } else {
+      foundInfo.textContent = "Няма запис с този номер на крава.";
+      pregnancySection.style.display = "none";
+    }
+  });
+
+  // Попълване на селектора за редакция
+  function populateRecordSelect() {
+    recordSelect.innerHTML = '<option value="">-- Избери запис --</option>';
+    data.forEach(r => {
+      const option = document.createElement("option");
+      option.value = r.id;
+      option.textContent = `${r.cowNumber} (${r.worker}) - ${r.date}`;
+      recordSelect.appendChild(option);
+    });
+  }
+
+  // При избор на запис за редакция
+  recordSelect.addEventListener("change", () => {
+    const id = recordSelect.value;
+    if (!id) {
+      editFormContainer.style.display = "none";
+      return;
+    }
+    const record = data.find(r => r.id === id);
+if (!record) return;
+document.getElementById("editWorker").value = record.worker;
+document.getElementById("editCowNumber").value = record.cowNumber;
+document.getElementById("editType").value = record.type;
+document.getElementById("editDate").value = record.date;
+document.getElementById("editResult").value = record.result || "Няма данни";
+
+editFormContainer.style.display = "block";
+});
+
+// Записване на редакция
+editRecordForm.addEventListener("submit", e => {
+e.preventDefault();
+const id = recordSelect.value;
+if (!id) return;
+const updated = {
+  worker: document.getElementById("editWorker").value,
+  cowNumber: document.getElementById("editCowNumber").value.trim(),
+  type: document.getElementById("editType").value.trim(),
+  date: document.getElementById("editDate").value,
+  result: document.getElementById("editResult").value,
+};
+
+db.collection("records").doc(id).update(updated).then(() => {
+  alert("Записът е обновен.");
+  editFormContainer.style.display = "none";
+  recordSelect.value = "";
+  loadData();
+});
+});
+
+// Графика за успеваемост по осеменители
+function updateChart() {
+const ctx = document.getElementById("successChart").getContext("2d");
+const stats = {};
+workers.forEach(w => stats[w] = { pos: 0, total: 0 });
+
+data.forEach(rec => {
+  if (stats[rec.worker]) {
+    if (rec.result === "Положителен") stats[rec.worker].pos++;
+    if (rec.result === "Положителен" || rec.result === "Отрицателен") stats[rec.worker].total++;
+  }
+});
+
+const labels = workers;
+const rates = workers.map(w => {
+  const s = stats[w];
+  return s.total > 0 ? (s.pos / s.total * 100).toFixed(2) : 0;
+});
+
+if (chart) {
+  chart.data.labels = labels;
+  chart.data.datasets[0].data = rates;
+  chart.update();
+} else {
+  chart = new Chart(ctx, {
+    type: "bar",
+    data: {
+      labels,
+      datasets: [{
+        label: "Успеваемост %",
+        data: rates,
+        backgroundColor: "rgba(75, 192, 192, 0.7)"
+      }]
+    },
+    options: {
+      scales: {
+        y: { beginAtZero: true, max: 100 }
+      }
+    }
+  });
+}
+}
 </script>
-</body>
-</html>
+
+</body> </html> ```
