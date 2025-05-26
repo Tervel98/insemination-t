@@ -197,198 +197,87 @@
       </table>
     </div>
   </div>
+<script>
+  // --- Login ---
+  const loginScreen = document.getElementById("loginScreen");
+  const appScreen = document.getElementById("app");
+  const loginBtn = document.getElementById("loginBtn");
+  const passwordInput = document.getElementById("passwordInput");
+  const loginError = document.getElementById("loginError");
 
-  <script>
-    // --- Login ---
-    const loginScreen = document.getElementById("loginScreen");
-    const appScreen = document.getElementById("app");
-    const loginBtn = document.getElementById("loginBtn");
-    const passwordInput = document.getElementById("passwordInput");
-    const loginError = document.getElementById("loginError");
+  const ACCESS_PASSWORD = "9802";
+  const EDIT_PASSWORD = "1234"; // парола за редакция на тест за бременност
 
-    const ACCESS_PASSWORD = "9802";
-    const EDIT_PASSWORD = "1234"; // парола за редакция на тест за бременност
-
-    loginBtn.onclick = () => {
-      if(passwordInput.value === ACCESS_PASSWORD){
-        loginScreen.style.display = "none";
-        appScreen.classList.remove("hidden");
-        initApp();
-      } else {
-        loginError.style.display = "block";
-      }
-    };
-
-    // --- Firebase и приложение ---
-    function initApp(){
-      const firebaseConfig = {
-        apiKey: "AIzaSyC-LpBbZPD_FDcAall27oiloU-XcMVMUd8",
-        authDomain: "insemination-tracker-46146.firebaseapp.com",
-        projectId: "insemination-tracker-46146",
-        storageBucket: "insemination-tracker-46146.appspot.com",
-        messagingSenderId: "290400954218",
-        appId: "1:290400954218:web:8aa4c9b59b76f55853e713",
-        measurementId: "G-HBD1HET1XW"
-      };
-      firebase.initializeApp(firebaseConfig);
-      const db = firebase.firestore();
-
-      let data = [];
-      let chart;
-
-      const filterMonth = document.getElementById("filterMonth");
-
-      async function loadData(){
-        const snapshot = await db.collection("inseminations").get();
-        data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        updateTablesAndChart();
-      }
-
-      document.getElementById("inseminationForm").addEventListener("submit", async (e) => {
-        e.preventDefault();
-        const record = {
-          worker: document.getElementById("worker").value,
-          cowNumber: document.getElementById("cowNumber").value.trim(),
-          type: document.getElementById("type").value.trim(),
-          date: document.get
-  // Търсене и редактиране тест
-  const searchForm = document.getElementById("searchForm");
-  const searchResult = document.getElementById("searchResult");
-  const foundInfo = document.getElementById("foundInfo");
-  const pregnancySection = document.getElementById("pregnancySection");
-  const pregnancyResult = document.getElementById("pregnancyResult");
-  const editPasswordInput = document.getElementById("editPassword");
-  const updateTestBtn = document.getElementById("updateTestBtn");
-  const editError = document.getElementById("editError");
-  const editSuccess = document.getElementById("editSuccess");
-
-  let currentDocId = null;
-
-  searchForm.addEventListener("submit", e => {
-    e.preventDefault();
-    editError.style.display = "none";
-    editSuccess.style.display = "none";
-    pregnancySection.style.display = "none";
-    currentDocId = null;
-
-    const cow = document.getElementById("searchCow").value.trim();
-    if(!cow) return alert("Въведете номер на крава.");
-
-    const found = data.find(d => d.cowNumber === cow);
-    if(found){
-      searchResult.style.display = "block";
-      foundInfo.textContent = `Осеменител: ${found.worker}, Вид: ${found.type}, Дата: ${found.date}, Тест: ${found.pregnancyTest}`;
-      pregnancyResult.value = found.pregnancyTest || "Няма данни";
-      pregnancySection.style.display = "block";
-      currentDocId = found.id;
+  loginBtn.onclick = () => {
+    if(passwordInput.value === ACCESS_PASSWORD){
+      loginScreen.style.display = "none";
+      appScreen.classList.remove("hidden");
+      initApp();
     } else {
-      alert("Крава с този номер не е намерена.");
-      searchResult.style.display = "none";
+      loginError.style.display = "block";
     }
-  });
+  };
 
-  updateTestBtn.addEventListener("click", async () => {
-    editError.style.display = "none";
-    editSuccess.style.display = "none";
-    if(editPasswordInput.value !== EDIT_PASSWORD){
-      editError.style.display = "block";
-      return;
+  // --- Firebase и приложение ---
+  function initApp(){
+    const firebaseConfig = {
+      apiKey: "AIzaSyC-LpBbZPD_FDcAall27oiloU-XcMVMUd8",
+      authDomain: "insemination-tracker-46146.firebaseapp.com",
+      projectId: "insemination-tracker-46146",
+      storageBucket: "insemination-tracker-46146.appspot.com",
+      messagingSenderId: "290400954218",
+      appId: "1:290400954218:web:8aa4c9b59b76f55853e713",
+      measurementId: "G-HBD1HET1XW"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    let data = [];
+    let chart;
+
+    const filterMonth = document.getElementById("filterMonth");
+    async function loadData(){
+      const snapshot = await db.collection("inseminations").get();
+      data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      updateTablesAndChart();
     }
-    if(!currentDocId){
-      alert("Няма избрана крава.");
-      return;
-    }
-    const newTest = pregnancyResult.value;
-    try {
-      await db.collection("inseminations").doc(currentDocId).update({pregnancyTest: newTest});
-      editSuccess.style.display = "block";
-      editPasswordInput.value = "";
+
+    document.getElementById("inseminationForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const record = {
+        worker: document.getElementById("worker").value,
+        cowNumber: document.getElementById("cowNumber").value.trim(),
+        type: document.getElementById("type").value.trim(),
+        date: document.getElementById("date").value,
+        pregnancyTest: "Няма данни"
+      };
+      if(!record.worker || !record.cowNumber || !record.type || !record.date){
+        alert("Моля, попълнете всички полета.");
+        return;
+      }
+      await db.collection("inseminations").add(record);
+      document.getElementById("inseminationForm").reset();
       await loadData();
-    } catch(e) {
-      alert("Грешка при обновяване.");
-    }
-  });
-
-  filterMonth.addEventListener("change", () => {
-    updateTablesAndChart();
-  });
-
-  function updateTablesAndChart(){
-    // Филтриране по месец
-    let filteredData = data;
-    if(filterMonth.value){
-      const [year, month] = filterMonth.value.split("-");
-      filteredData = data.filter(d => {
-        const dDate = new Date(d.date);
-        return dDate.getFullYear() === parseInt(year) && (dDate.getMonth() + 1) === parseInt(month);
-      });
-    }
-
-    const workers = ["ivan","vasil","krustyo","stela"];
-    workers.forEach(w => {
-      const tbl = document.getElementById("table-" + w);
-      const rateDiv = document.getElementById("rate-" + w);
-      // чистим таблицата освен хедъра
-      while(tbl.rows.length > 1) tbl.deleteRow(1);
-
-      const workerData = filteredData.filter(d => d.worker === w);
-      let successCount = 0;
-      let testCount = 0;
-
-      workerData.forEach(rec => {
-        const row = tbl.insertRow();
-        row.insertCell(0).textContent = rec.cowNumber;
-        row.insertCell(1).textContent = rec.type;
-        row.insertCell(2).textContent = rec.date;
-        row.insertCell(3).textContent = rec.pregnancyTest;
-
-        if(rec.pregnancyTest === "Положителен"){
-          successCount++;
-          testCount++;
-        } else if(rec.pregnancyTest === "Отрицателен"){
-          testCount++;
-        }
-      });
-
-      let rateText = "Няма тестове";
-      if(testCount > 0){
-        const successPercent = ((successCount / testCount) * 100).toFixed(1);
-        const failPercent = (100 - successPercent).toFixed(1);
-        rateText = `Успеваемост: ${successPercent}% | Неуспеваемост: ${failPercent}% (${successCount} от ${testCount})`;
-      }
-      rateDiv.textContent = rateText;
     });
 
-    // Обща диаграма с успех и неуспех
-    const totalSuccess = filteredData.filter(d => d.pregnancyTest === "Положителен").length;
-    const totalFail = filteredData.filter(d => d.pregnancyTest === "Отрицателен").length;
+    // Търсене и редактиране тест
+    const searchForm = document.getElementById("searchForm");
+    const searchResult = document.getElementById("searchResult");
+    const foundInfo = document.getElementById("foundInfo");
+    const pregnancySection = document.getElementById("pregnancySection");
+    const pregnancyResult = document.getElementById("pregnancyResult");
+    const editPasswordInput = document.getElementById("editPassword");
+    const updateTestBtn = document.getElementById("updateTestBtn");
+    const editError = document.getElementById("editError");
+    const editSuccess = document.getElementById("editSuccess");
 
-    if(chart) chart.destroy();
+    let currentDocId = null;
 
-    const ctx = document.getElementById('successChart').getContext('2d');
-    chart = new Chart(ctx, {
-      type: 'doughnut',
-      data: {
-        labels: ['Успеваемост (%)', 'Неуспеваемост (%)'],
-        datasets: [{
-          data: totalSuccess + totalFail === 0 ? [0,0] : [
-            (totalSuccess / (totalSuccess + totalFail) * 100).toFixed(1),
-            (totalFail / (totalSuccess + totalFail) * 100).toFixed(1)
-          ],
-          backgroundColor: ['#4caf50', '#f44336'],
-          borderWidth: 1
-        }]
-      },
-      options: {
-        responsive: true,
-        plugins: {
-          legend: {
-            position: 'bottom'
-          }
-        }
-      }
-    });
-  }
+    searchForm.addEventListener("submit", e => {
+      e.preventDefault();
+      editError.style.display = "none";
+      editSuccess.style.display = "none";
+      pregnancySection.style.display = "none";
+      currentDocId = null;
 
-  loadData();
-}
+      const cow = document.getElementById("searchCow").value.trim
