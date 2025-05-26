@@ -2,197 +2,67 @@
 <html lang="bg">
 <head>
   <meta charset="UTF-8" />
-  <title>Осеменявания</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Осеменяване</title>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     body {
-      font-family: Arial, sans-serif;
-      background: #f7f7f7;
-      padding: 20px;
+      font-family: sans-serif;
+      padding: 1rem;
+      background-color: #f5f5f5;
     }
-    h1 {
-      text-align: center;
-    }
-    .form-section {
-      background: #ffffff;
-      padding: 20px;
-      margin-bottom: 30px;
-      border: 1px solid #ddd;
-      border-radius: 10px;
-      box-shadow: 2px 2px 8px rgba(0,0,0,0.1);
-    }
-    label {
-      display: block;
-      margin: 10px 0 5px;
-    }
-    input, select {
-      width: 100%;
-      padding: 8px;
-      margin-bottom: 10px;
-    }
-    button {
-      padding: 10px 20px;
-      background-color: #4caf50;
-      color: white;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-    }
-    button:hover {
-      background-color: #45a049;
-    }
-    .inseminator {
+    .hidden { display: none; }
+    .login-box {
+      max-width: 300px;
+      margin: 50px auto;
+      padding: 2rem;
       background: white;
-      border: 1px solid #ddd;
       border-radius: 10px;
-      padding: 20px;
-      margin-bottom: 30px;
-      box-shadow: 2px 2px 8px rgba(0,0,0,0.1);
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
     }
-    table {
+    .login-box input, .login-box button {
       width: 100%;
+      margin-bottom: 10px;
+      padding: 0.5rem;
+    }
+    .section { margin-top: 2rem; }
+    table {
       border-collapse: collapse;
-      margin-top: 10px;
+      width: 100%;
+      margin-top: 1rem;
+      background: white;
     }
     th, td {
-      padding: 10px;
       border: 1px solid #ccc;
+      padding: 0.5rem;
       text-align: center;
     }
     th {
-      background-color: #e0e0e0;
+      background-color: #eee;
     }
-    .success-rate {
-      font-weight: bold;
-      color: #333;
-      margin-bottom: 10px;
-    }
-    #chartContainer {
-      background: #fff;
-      padding: 20px;
-      border-radius: 10px;
-      box-shadow: 2px 2px 8px rgba(0,0,0,0.1);
-      margin-bottom: 30px;
-    }
-    /* Стил за бутон изтрий */
     .delete-btn {
       background-color: #e74c3c;
       color: white;
       border: none;
-      padding: 5px 10px;
+      padding: 0.3rem 0.6rem;
       cursor: pointer;
-      border-radius: 3px;
-    }
-    .delete-btn:hover {
-      background-color: #c0392b;
     }
   </style>
 </head>
 <body>
-  <h1>График на осеменяванията</h1>
-
-  <div class="form-section">
-    <h2>Добави осеменяване</h2>
-    <form id="inseminationForm">
-      <label for="worker">Осеменител:</label>
-      <select id="worker" required>
-        <option value="">Избери</option>
-        <option value="ivan">Иван</option>
-        <option value="vasil">Васил</option>
-        <option value="krustyo">Кръстьо</option>
-        <option value="stela">Стела</option>
-      </select>
-      <label for="cowNumber">Номер на кравата:</label>
-      <input type="text" id="cowNumber" required />
-      <label for="type">Вид осеменяване:</label>
-      <input type="text" id="type" required />
-      <label for="date">Дата на осеменяване:</label>
-      <input type="date" id="date" required />
-      <button type="submit">Добави</button>
-    </form>
+  <!-- Форма за вход -->
+  <div id="loginSection" class="login-box">
+    <h2>Вход</h2>
+    <input type="text" id="username" placeholder="Потребителско име" />
+    <input type="password" id="password" placeholder="Парола" />
+    <button onclick="checkLogin()">Влез</button>
+    <p id="loginError" style="color:red;"></p>
   </div>
 
-  <div class="form-section">
-    <h2>Търси крава и добави тест за бременност</h2>
-    <form id="searchForm">
-      <label for="searchCow">Номер на кравата:</label>
-      <input type="text" id="searchCow" required />
-      <button type="submit">Търси</button>
-    </form>
-    <div id="searchResult" style="margin-top: 20px; display: none;">
-      <p><strong>Намерена крава:</strong></p>
-      <p id="foundInfo"></p>
-      <div id="pregnancySection" style="display: none;">
-        <label for="pregnancyResult">Тест за бременност:</label>
-        <select id="pregnancyResult">
-          <option value="Положителен">Положителен</option>
-          <option value="Отрицателен">Отрицателен</option>
-          <option value="Няма данни">Няма данни</option>
-        </select>
-        <button id="updateTestBtn">Запиши резултат</button>
-      </div>
-    </div>
-  </div>
-
-  <div id="chartContainer">
-    <h2>Графика на успеваемост и неуспеваемост</h2>
-    <canvas id="successChart" width="400" height="200"></canvas>
-  </div>
-
-  <div class="inseminator">
-    <h2>Иван</h2>
-    <div class="success-rate" id="rate-ivan"></div>
-    <table id="table-ivan">
-      <tr>
-        <th>Номер на кравата</th>
-        <th>Вид осеменяване</th>
-        <th>Дата</th>
-        <th>Тест за бременност</th>
-        <th>Действия</th>
-      </tr>
-    </table>
-  </div>
-  <div class="inseminator">
-    <h2>Васил</h2>
-    <div class="success-rate" id="rate-vasil"></div>
-    <table id="table-vasil">
-      <tr>
-        <th>Номер на кравата</th>
-        <th>Вид осеменяване</th>
-        <th>Дата</th>
-        <th>Тест за бременност</th>
-        <th>Действия</th>
-      </tr>
-    </table>
-  </div>
-  <div class="inseminator">
-    <h2>Кръстьо</h2>
-    <div class="success-rate" id="rate-krustyo"></div>
-    <table id="table-krustyo">
-      <tr>
-        <th>Номер на кравата</th>
-        <th>Вид осеменяване</th>
-        <th>Дата</th>
-        <th>Тест за бременност</th>
-        <th>Действия</th>
-      </tr>
-    </table>
-  </div>
-  <div class="inseminator">
-    <h2>Стела</h2>
-    <div class="success-rate" id="rate-stela"></div>
-    <table id="table-stela">
-      <tr>
-        <th>Номер на кравата</th>
-        <th>Вид осеменяване</th>
-        <th>Дата</th>
-        <th>Тест за бременност</th>
-        <th>Действия</th>
-      </tr>
-    </table>
-  </div>
+  <!-- Основна част на сайта -->
+  <div id="mainContent" class="hidden">
   <script>
     window.onload = function () {
       const firebaseConfig = {
@@ -234,7 +104,7 @@ result: "Няма данни",
     updateTables();
     this.reset();
   });
-       document.getElementById("searchForm").addEventListener("submit", function (e) {
+      document.getElementById("searchForm").addEventListener("submit", function (e) {
         e.preventDefault();
         const cowNumber = document.getElementById("searchCow").value.trim();
         const found = data.find(r => r.cowNumber === cowNumber);
