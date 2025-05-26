@@ -5,7 +5,6 @@
   <title>Осеменявания</title>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     body {
@@ -16,7 +15,7 @@
     h1, h2 {
       text-align: center;
     }
-    .form-section, .inseminator, #loginSection, #chartContainer {
+    .form-section, .inseminator, #chartContainer {
       background: #ffffff;
       padding: 20px;
       margin-bottom: 30px;
@@ -65,57 +64,216 @@
   </style>
 </head>
 <body>
-  <h1>График на осеменяванията</h1>
 
-  <div id="loginSection">
+  <!-- Форма за вход -->
+  <div id="loginForm">
     <h2>Вход</h2>
-    <label for="email">Имейл:</label>
-    <input type="email" id="email">
+    <label for="username">Потребителско име:</label>
+    <input type="text" id="username">
     <label for="password">Парола:</label>
     <input type="password" id="password">
-    <button id="loginBtn">Вход</button>
+    <button onclick="checkLogin()">Влез</button>
+    <p id="loginError" style="color:red; display:none;">Грешно потребителско име или парола.</p>
   </div>
 
+  <!-- Основно съдържание (скрито, докато не се влезе) -->
   <div id="appContent" style="display: none;">
-    <!-- Оригиналното съдържание на приложението започва тук -->
-    <!-- Целият оригинален HTML код от формите, таблиците и chart контейнера остава непроменен тук -->
-    <!-- Поради ограничение на място, можеш да копираш съдържанието от оригиналния HTML вътре в този div -->
+    <h1>График на осеменяванията</h1>
+
+    <div class="form-section">
+      <h2>Добави осеменяване</h2>
+      <form id="inseminationForm">
+        <label for="worker">Осеменител:</label>
+        <select id="worker" required>
+          <option value="">Избери</option>
+          <option value="ivan">Иван</option>
+          <option value="vasil">Васил</option>
+          <option value="krustyo">Кръстьо</option>
+          <option value="stela">Стела</option>
+        </select>
+        <label for="cowNumber">Номер на кравата:</label>
+        <input type="text" id="cowNumber" required>
+        <label for="type">Вид осеменяване:</label>
+        <input type="text" id="type" required>
+        <label for="date">Дата на осеменяване:</label>
+        <input type="date" id="date" required>
+        <button type="submit">Добави</button>
+      </form>
+    </div>
+
+    <div class="form-section">
+      <h2>Търси крава и добави тест за бременност</h2>
+      <form id="searchForm">
+        <label for="searchCow">Номер на кравата:</label>
+        <input type="text" id="searchCow" required>
+        <button type="submit">Търси</button>
+      </form>
+      <div id="searchResult" style="margin-top: 20px; display: none;">
+        <p><strong>Намерена крава:</strong></p>
+        <p id="foundInfo"></p>
+        <div id="pregnancySection" style="display: none;">
+          <label for="pregnancyResult">Тест за бременност:</label>
+          <select id="pregnancyResult">
+            <option value="Положителен">Положителен</option>
+            <option value="Отрицателен">Отрицателен</option>
+          </select>
+          <button id="updateTestBtn">Запиши резултат</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="chartContainer">
+      <h2>Графика на успеваемост</h2>
+      <canvas id="successChart" width="400" height="200"></canvas>
+    </div>
+
+    <div class="inseminator">
+      <h2>Иван</h2>
+      <div class="success-rate" id="rate-ivan"></div>
+      <table id="table-ivan"><tr><th>Номер</th><th>Вид</th><th>Дата</th><th>Тест</th></tr></table>
+    </div>
+    <div class="inseminator">
+      <h2>Васил</h2>
+      <div class="success-rate" id="rate-vasil"></div>
+      <table id="table-vasil"><tr><th>Номер</th><th>Вид</th><th>Дата</th><th>Тест</th></tr></table>
+    </div>
+    <div class="inseminator">
+      <h2>Кръстьо</h2>
+      <div class="success-rate" id="rate-krustyo"></div>
+      <table id="table-krustyo"><tr><th>Номер</th><th>Вид</th><th>Дата</th><th>Тест</th></tr></table>
+    </div>
+    <div class="inseminator">
+      <h2>Стела</h2>
+      <div class="success-rate" id="rate-stela"></div>
+      <table id="table-stela"><tr><th>Номер</th><th>Вид</th><th>Дата</th><th>Тест</th></tr></table>
+    </div>
   </div>
 
   <script>
-    const firebaseConfig = {
-      apiKey: "AIzaSyC-LpBbZPD_FDcAall27oiloU-XcMVMUd8",
-      authDomain: "insemination-tracker-46146.firebaseapp.com",
-      projectId: "insemination-tracker-46146"
-    };
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore();
-    const auth = firebase.auth();
-
-    document.getElementById("loginBtn").addEventListener("click", function () {
-      const email = document.getElementById("email").value;
+    // Провери вход
+    function checkLogin() {
+      const username = document.getElementById("username").value;
       const password = document.getElementById("password").value;
 
-      auth.signInWithEmailAndPassword(email, password)
-        .then(() => {
-          document.getElementById("loginSection").style.display = "none";
-          document.getElementById("appContent").style.display = "block";
-          location.reload();
-        })
-        .catch(error => {
-          alert("Грешка при вход: " + error.message);
-        });
-    });
-
-    auth.onAuthStateChanged(user => {
-      if (user) {
-        document.getElementById("loginSection").style.display = "none";
+      if (username === "admin" && password === "1234") {
+        document.getElementById("loginForm").style.display = "none";
         document.getElementById("appContent").style.display = "block";
+        initApp();
       } else {
-        document.getElementById("loginSection").style.display = "block";
-        document.getElementById("appContent").style.display = "none";
+        document.getElementById("loginError").style.display = "block";
       }
-    });
+    }
+
+    // Основна логика
+    function initApp() {
+      const firebaseConfig = {
+        apiKey: "AIzaSyC-LpBbZPD_FDcAall27oiloU-XcMVMUd8",
+        authDomain: "insemination-tracker-46146.firebaseapp.com",
+        projectId: "insemination-tracker-46146",
+      };
+      firebase.initializeApp(firebaseConfig);
+      const db = firebase.firestore();
+      const data = [];
+      let chart;
+
+      async function loadData() {
+        const snapshot = await db.collection("inseminations").get();
+        snapshot.forEach(doc => data.push({ id: doc.id, ...doc.data() }));
+        updateTables();
+      }
+
+      document.getElementById("inseminationForm").addEventListener("submit", async function (e) {
+        e.preventDefault();
+        const record = {
+          worker: document.getElementById("worker").value,
+          cowNumber: document.getElementById("cowNumber").value,
+          type: document.getElementById("type").value,
+          date: document.getElementById("date").value,
+          result: "Няма данни"
+        };
+        const docRef = await db.collection("inseminations").add(record);
+        data.push({ id: docRef.id, ...record });
+        updateTables();
+        this.reset();
+      });
+
+      document.getElementById("searchForm").addEventListener("submit", function(e) {
+        e.preventDefault();
+        const cowNumber = document.getElementById("searchCow").value.trim();
+        const found = data.find(entry => entry.cowNumber === cowNumber);
+
+        if (found) {
+          document.getElementById("foundInfo").textContent =
+            `Осеменител: ${found.worker.toUpperCase()}, Вид: ${found.type}, Дата: ${found.date}, Тест: ${found.result}`;
+          document.getElementById("searchResult").style.display = 'block';
+          document.getElementById("pregnancyResult").value = found.result;
+          document.getElementById("pregnancySection").style.display = 'block';
+
+          document.getElementById("updateTestBtn").onclick = async function () {
+            const result = document.getElementById("pregnancyResult").value;
+            found.result = result;
+            await db.collection("inseminations").doc(found.id).update({ result });
+            updateTables();
+            alert("Резултатът е обновен.");
+          };
+        } else {
+          document.getElementById("foundInfo").textContent = "Няма намерен запис за тази крава.";
+          document.getElementById("pregnancySection").style.display = 'none';
+          document.getElementById("searchResult").style.display = 'block';
+        }
+      });
+
+      function updateTables() {
+        const workers = ['ivan', 'vasil', 'krustyo', 'stela'];
+        const labels = [];
+        const percentages = [];
+
+        workers.forEach(worker => {
+          const table = document.getElementById('table-' + worker);
+          const rate = document.getElementById('rate-' + worker);
+          while (table.rows.length > 1) table.deleteRow(1);
+
+          const filtered = data.filter(r => r.worker === worker);
+          let successCount = 0;
+          filtered.forEach(record => {
+            const row = table.insertRow();
+            row.insertCell(0).textContent = record.cowNumber;
+            row.insertCell(1).textContent = record.type;
+            row.insertCell(2).textContent = record.date;
+            row.insertCell(3).textContent = record.result;
+            if (record.result === "Положителен") successCount++;
+          });
+          const percent = filtered.length > 0 ? ((successCount / filtered.length) * 100).toFixed(1) : 0;
+          rate.textContent = `Успеваемост: ${percent}%`;
+          labels.push(worker.charAt(0).toUpperCase() + worker.slice(1));
+          percentages.push(percent);
+        });
+
+        if (chart) chart.destroy();
+        const ctx = document.getElementById('successChart').getContext('2d');
+        chart = new Chart(ctx, {
+          type: 'bar',
+          data: {
+            labels: labels,
+            datasets: [{
+              label: '% Успеваемост',
+              data: percentages,
+              backgroundColor: ['#4caf50', '#2196f3', '#ff9800', '#9c27b0']
+            }]
+          },
+          options: {
+            scales: {
+              y: {
+                beginAtZero: true,
+                max: 100
+              }
+            }
+          }
+        });
+      }
+
+      loadData();
+    }
   </script>
 </body>
 </html>
