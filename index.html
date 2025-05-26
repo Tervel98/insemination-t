@@ -26,13 +26,12 @@
       width: 100%;
       margin-bottom: 10px;
       padding: 0.5rem;
-      font-size: 1rem;
     }
     .section { margin-top: 2rem; }
     table {
       border-collapse: collapse;
       width: 100%;
-      margin-top: 0.5rem;
+      margin-top: 1rem;
       background: white;
     }
     th, td {
@@ -49,13 +48,11 @@
       border: none;
       padding: 0.3rem 0.6rem;
       cursor: pointer;
-      border-radius: 4px;
     }
   </style>
 </head>
 <body>
-
-  <!-- Вход -->
+  <!-- Форма за вход -->
   <div id="loginSection" class="login-box">
     <h2>Вход</h2>
     <input type="text" id="username" placeholder="Потребителско име" />
@@ -64,16 +61,15 @@
     <p id="loginError" style="color:red;"></p>
   </div>
 
-  <!-- Основно съдържание (скрито по начало) -->
+  <!-- Основна част на сайта -->
   <div id="mainContent" class="hidden">
 
-    <!-- Форма за добавяне на осеменяване -->
+    <!-- Форма за добавяне на нов запис -->
     <div class="section">
-      <h3>Добави осеменяване</h3>
+      <h3>Добавяне на осеменяване</h3>
       <form id="inseminationForm">
         <label>Осеменител:
           <select id="worker" required>
-            <option value="">-- Избери --</option>
             <option value="ivan">ivan</option>
             <option value="vasil">vasil</option>
             <option value="krustyo">krustyo</option>
@@ -92,84 +88,97 @@
         <button type="submit">Добави</button>
       </form>
     </div>
-    <!-- Таблици по осеменители -->
+
+    <!-- Търсене по номер -->
     <div class="section">
-      <h3>Резултати по осеменители</h3>
-
-      <div id="tablesContainer">
-        <div style="margin-bottom: 2rem;">
-          <h4>ivan <span id="rate-ivan"></span></h4>
-          <table id="table-ivan">
-            <thead>
-              <tr>
-                <th>Крава</th><th>Вид</th><th>Дата</th><th>Тест</th><th>Действие</th>
-              </tr>
-            </thead>
-            <tbody></tbody>
-          </table>
-        </div>
-
-        <div style="margin-bottom: 2rem;">
-          <h4>vasil <span id="rate-vasil"></span></h4>
-          <table id="table-vasil">
-            <thead>
-              <tr>
-                <th>Крава</th><th>Вид</th><th>Дата</th><th>Тест</th><th>Действие</th>
-              </tr>
-            </thead>
-            <tbody></tbody>
-          </table>
-        </div>
-
-        <div style="margin-bottom: 2rem;">
-          <h4>krustyo <span id="rate-krustyo"></span></h4>
-          <table id="table-krustyo">
-            <thead>
-              <tr>
-                <th>Крава</th><th>Вид</th><th>Дата</th><th>Тест</th><th>Действие</th>
-              </tr>
-            </thead>
-            <tbody></tbody>
-          </table>
-        </div>
-
-        <div style="margin-bottom: 2rem;">
-          <h4>stela <span id="rate-stela"></span></h4>
-          <table id="table-stela">
-            <thead>
-              <tr>
-                <th>Крава</th><th>Вид</th><th>Дата</th><th>Тест</th><th>Действие</th>
-              </tr>
-            </thead>
-            <tbody></tbody>
-          </table>
+      <h3>Търсене по номер на крава</h3>
+      <form id="searchForm">
+        <input type="text" id="searchCow" placeholder="Въведи номер на крава" required />
+        <button type="submit">Търси</button>
+      </form>
+      <div id="searchResult" style="margin-top:1rem; display:none;">
+        <p id="foundInfo"></p>
+        <div id="pregnancySection" style="display:none;">
+          <label>Резултат тест бременност:
+            <select id="pregnancyResult">
+              <option value="Няма данни">Няма данни</option>
+              <option value="Положителен">Положителен</option>
+              <option value="Отрицателен">Отрицателен</option>
+            </select>
+          </label>
+          <button id="updateTestBtn">Обнови резултат</button>
         </div>
       </div>
+    </div>
+
+    <!-- Таблици с данни по осеменители -->
+    <div class="section" id="tablesSection">
+      <h3>Данни по осеменители</h3>
+      <div id="workerTablesContainer"></div>
     </div>
 
     <!-- Графика -->
     <div class="section">
       <h3>Графика на успеваемост</h3>
-      <canvas id="successChart" style="max-width: 600px; max-height: 300px;"></canvas>
+      <canvas id="successChart"></canvas>
     </div>
-  </div> <!-- край mainContent -->
+
+    <!-- Секция за редакция -->
+    <div class="section">
+      <h3>Редактиране на записи</h3>
+      <label>Избери запис за редакция:
+        <select id="recordSelect">
+          <option value="">-- Избери запис --</option>
+        </select>
+      </label>
+      <div id="editFormContainer" style="margin-top: 1rem; display:none;">
+        <form id="editRecordForm">
+          <label>Осеменител:
+            <select id="editWorker" required>
+              <option value="ivan">ivan</option>
+              <option value="vasil">vasil</option>
+              <option value="krustyo">krustyo</option>
+              <option value="stela">stela</option>
+            </select>
+          </label><br /><br />
+          <label>Номер на крава:
+            <input type="text" id="editCowNumber" required />
+          </label><br /><br />
+          <label>Вид осеменяване:
+            <input type="text" id="editType" required />
+          </label><br /><br />
+          <label>Дата:
+            <input type="date" id="editDate" required />
+          </label><br /><br />
+          <label>Резултат:
+            <select id="editResult">
+              <option value="Няма данни">Няма данни</option>
+              <option value="Положителен">Положителен</option>
+              <option value="Отрицателен">Отрицателен</option>
+            </select>
+          </label><br /><br />
+          <button type="submit">Запази промените</button>
+        </form>
+      </div>
+    </div>
+
+  </div>
 
   <script>
-    const validUser = "admin";
-    const validPass = "9802";
+    const correctUsername = "admin";
+    const correctPassword = "9802";
 
     function checkLogin() {
-      const user = document.getElementById("username").value.trim();
-      const pass = document.getElementById("password").value.trim();
-      const errorElem = document.getElementById("loginError");
+      const username = document.getElementById("username").value.trim();
+      const password = document.getElementById("password").value.trim();
+      const errorEl = document.getElementById("loginError");
 
-      if (user === validUser && pass === validPass) {
+      if (username === correctUsername && password === correctPassword) {
         document.getElementById("loginSection").classList.add("hidden");
         document.getElementById("mainContent").classList.remove("hidden");
-        errorElem.textContent = "";
         initApp();
       } else {
-        errorElem.textContent = "Грешно потребителско име или парола!";
+        errorEl.textContent = "Грешно потребителско име или парола!";
       }
     }
 
@@ -179,80 +188,70 @@
         authDomain: "insemination-tracker-46146.firebaseapp.com",
         projectId: "insemination-tracker-46146",
       };
-
       firebase.initializeApp(firebaseConfig);
       const db = firebase.firestore();
 
-      let data = [];
+      const data = [];
       let chart;
 
-      async function loadData() {
-        const snapshot = await db.collection("inseminations").get();
-        data = [];
-        snapshot.forEach(doc => data.push({ id: doc.id, ...doc.data() }));
-        updateTables();
+      const workerTablesContainer = document.getElementById("workerTablesContainer");
+      const recordSelect = document.getElementById("recordSelect");
+      const editFormContainer = document.getElementById("editFormContainer");
+      const editRecordForm = document.getElementById("editRecordForm");
+
+      // Създаваме таблици по осеменители
+      const workers = ['ivan', 'vasil', 'krustyo', 'stela'];
+
+      function createTables() {
+        workerTablesContainer.innerHTML = "";
+        workers.forEach(worker => {
+          const section = document.createElement("section");
+          section.innerHTML = `
+            <h4>${worker}</h4>
+            <table id="table-${worker}">
+              <thead>
+                <tr>
+                  <th>Номер крава</th>
+                  <th>Вид</th>
+                  <th>Дата</th>
+                  <th>Резултат</th>
+                  <th>Действие</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+            <p id="rate-${worker}"></p>
+          `;
+          workerTablesContainer.appendChild(section);
+        });
       }
 
-      document.getElementById("inseminationForm").addEventListener("submit", async (e) => {
-        e.preventDefault();
-        const worker = document.getElementById("worker").value.trim().toLowerCase();
-        const cowNumber = document.getElementById("cowNumber").value.trim();
-        const type = document.getElementById("type").value.trim();
-        const date = document.getElementById("date").value;
-
-        if (data.some(entry => entry.cowNumber === cowNumber)) {
-          alert("Вече съществува запис с този номер на крава!");
-          return;
-        }
-
-        const record = {
-          worker,
-          cowNumber,
-          type,
-          date,
-          result: "Няма данни"
-        };
-
-        const docRef = await db.collection("inseminations").add(record);
-        data.push({ id: docRef.id, ...record });
-        updateTables();
-        e.target.reset();
-      });
-
       function updateTables() {
-        const workers = ["ivan", "vasil", "krustyo", "stela"];
-        const labels = [];
-        const success = [];
-        const fail = [];
-
         workers.forEach(worker => {
-          const table = document.getElementById("table-" + worker);
-          const rate = document.getElementById("rate-" + worker);
+          const tableBody = document.querySelector(`#table-${worker} tbody`);
+          const rateEl = document.getElementById(`rate-${worker}`);
+          tableBody.innerHTML = "";
 
-          // Премахваме старите редове (освен заглавията)
-          const tbody = table.tBodies[0];
-          while (tbody.firstChild) tbody.removeChild(tbody.firstChild);
-
-          const filtered = data.filter(r => r.worker && r.worker.toLowerCase().trim() === worker);
-
+          const filtered = data.filter(r => r.worker === worker);
           let pos = 0, neg = 0;
 
           filtered.forEach(record => {
-            const row = tbody.insertRow();
+            const row = document.createElement("tr");
 
-            row.insertCell(0).textContent = record.cowNumber;
-            row.insertCell(1).textContent = record.type;
-            row.insertCell(2).textContent = record.date;
-            row.insertCell(3).textContent = record.result;
+            row.innerHTML = `
+              <td>${record.cowNumber}</td>
+              <td>${record.type}</td>
+              <td>${record.date}</td>
+              <td>${record.result}</td>
+              <td></td>
+            `;
 
-            // Бутон за изтриване
             const delBtn = document.createElement("button");
             delBtn.textContent = "Изтрий";
             delBtn.className = "delete-btn";
-
             delBtn.onclick = async () => {
-              const password = prompt("Въведи парола за изтриване:");
-              if (password !== "9802") {
+              const pass = prompt("Въведи парола за изтриване:");
+              if (pass !== correctPassword) {
                 alert("Грешна парола!");
                 return;
               }
@@ -260,9 +259,12 @@
               const idx = data.findIndex(d => d.id === record.id);
               if (idx > -1) data.splice(idx, 1);
               updateTables();
+              populateRecordSelect();
+              updateChart();
             };
 
-            row.insertCell(4).appendChild(delBtn);
+            row.querySelector("td:last-child").appendChild(delBtn);
+            tableBody.appendChild(row);
 
             if (record.result === "Положителен") pos++;
             else if (record.result === "Отрицателен") neg++;
@@ -270,15 +272,31 @@
 
           const total = pos + neg;
           const successRate = total > 0 ? ((pos / total) * 100).toFixed(1) : 0;
-          rate.textContent = `Успеваемост: ${successRate}%`;
+          rateEl.textContent = `Успеваемост: ${successRate}%`;
+        });
+      }
 
+      // Графика
+      function updateChart() {
+        const labels = [];
+        const success = [];
+        const fail = [];
+
+        workers.forEach(worker => {
+          const filtered = data.filter(r => r.worker === worker);
+          let pos = 0, neg = 0;
+          filtered.forEach(record => {
+            if (record.result === "Положителен") pos++;
+            else if (record.result === "Отрицателен") neg++;
+          });
+          const total = pos + neg;
+          const successRate = total > 0 ? ((pos / total) * 100) : 0;
           labels.push(worker);
-          success.push(successRate);
+          success.push(successRate.toFixed(1));
           fail.push((100 - successRate).toFixed(1));
         });
 
         if (chart) chart.destroy();
-
         chart = new Chart(document.getElementById("successChart"), {
           type: "bar",
           data: {
@@ -295,8 +313,172 @@
         });
       }
 
-      loadData();
+      // Зареждане на данните от Firebase
+      async function loadData() {
+        data.length = 0;
+        const snapshot = await db.collection("inseminations").get();
+        snapshot.forEach(doc => data .push({ id: doc.id, ...doc.data() }));
+updateTables();
+populateRecordSelect();
+updateChart();
+}  // Добавяне на нов запис
+  document.getElementById("inseminationForm").onsubmit = async (e) => {
+    e.preventDefault();
+    const worker = document.getElementById("worker").value.trim().toLowerCase();
+    const cowNumber = document.getElementById("cowNumber").value.trim();
+    const type = document.getElementById("type").value.trim();
+    const date = document.getElementById("date").value;
+
+    if (!worker || !cowNumber || !type || !date) {
+      alert("Моля, попълнете всички полета!");
+      return;
     }
-  </script>
-</body>
-</html>
+
+    // Проверка за дублиране на номер
+    if (data.some(r => r.cowNumber === cowNumber)) {
+      alert("Вече съществува запис с този номер на крава!");
+      return;
+    }
+
+    await db.collection("inseminations").add({
+      worker,
+      cowNumber,
+      type,
+      date,
+      result: "Няма данни"
+    });
+
+    alert("Добавено успешно!");
+    document.getElementById("inseminationForm").reset();
+    loadData();
+  };
+
+  // Търсене по номер и обновяване на резултат тест
+  const searchForm = document.getElementById("searchForm");
+  const searchResult = document.getElementById("searchResult");
+  const foundInfo = document.getElementById("foundInfo");
+  const pregnancySection = document.getElementById("pregnancySection");
+  const pregnancyResult = document.getElementById("pregnancyResult");
+  const updateTestBtn = document.getElementById("updateTestBtn");
+  let currentSearchRecordId = null;
+
+  searchForm.onsubmit = (e) => {
+    e.preventDefault();
+    const searchVal = document.getElementById("searchCow").value.trim();
+    if (!searchVal) return;
+
+    const found = data.find(r => r.cowNumber === searchVal);
+    if (!found) {
+      foundInfo.textContent = "Няма намерен запис.";
+      pregnancySection.style.display = "none";
+      searchResult.style.display = "block";
+      currentSearchRecordId = null;
+      return;
+    }
+
+    foundInfo.textContent = `Осеменител: ${found.worker}, Дата: ${found.date}, Вид: ${found.type}, Резултат: ${found.result}`;
+    pregnancyResult.value = found.result || "Няма данни";
+    pregnancySection.style.display = "block";
+    searchResult.style.display = "block";
+    currentSearchRecordId = found.id;
+  };
+
+  updateTestBtn.onclick = async () => {
+    if (!currentSearchRecordId) return alert("Няма избран запис за обновяване.");
+    const newResult = pregnancyResult.value;
+
+    const pass = prompt("Въведи парола за обновяване:");
+    if (pass !== correctPassword) {
+      alert("Грешна парола!");
+      return;
+    }
+
+    await db.collection("inseminations").doc(currentSearchRecordId).update({
+      result: newResult
+    });
+
+    alert("Резултатът е обновен.");
+    loadData();
+    searchResult.style.display = "none";
+  };
+
+  // --- Редакция на записи ---
+
+  function populateRecordSelect() {
+    recordSelect.innerHTML = '<option value="">-- Избери запис --</option>';
+    data.forEach(rec => {
+      const option = document.createElement("option");
+      option.value = rec.id;
+      option.textContent = `${rec.cowNumber} (${rec.worker}) - ${rec.date}`;
+      recordSelect.appendChild(option);
+    });
+    editFormContainer.style.display = "none";
+  }
+
+  recordSelect.onchange = () => {
+    const selectedId = recordSelect.value;
+    if (!selectedId) {
+      editFormContainer.style.display = "none";
+      return;
+    }
+    const rec = data.find(r => r.id === selectedId);
+    if (!rec) return;
+
+    document.getElementById("editWorker").value = rec.worker;
+    document.getElementById("editCowNumber").value = rec.cowNumber;
+    document.getElementById("editType").value = rec.type;
+    document.getElementById("editDate").value = rec.date;
+    document.getElementById("editResult").value = rec.result || "Няма данни";
+
+    editFormContainer.style.display = "block";
+  };
+
+  editRecordForm.onsubmit = async (e) => {
+    e.preventDefault();
+    const selectedId = recordSelect.value;
+    if (!selectedId) return alert("Избери запис за редакция!");
+
+    const newWorker = document.getElementById("editWorker").value.trim().toLowerCase();
+    const newCowNumber = document.getElementById("editCowNumber").value.trim();
+    const newType = document.getElementById("editType").value.trim();
+    const newDate = document.getElementById("editDate").value;
+    const newResult = document.getElementById("editResult").value;
+
+    // Проверка за дублирани номера (без да броим текущия запис)
+    const duplicate = data.some(r => r.cowNumber === newCowNumber && r.id !== selectedId);
+    if (duplicate) {
+      alert("Вече съществува друг запис с този номер на крава!");
+      return;
+    }
+
+    const pass = prompt("Въведи парола за редакция:");
+    if (pass !== correctPassword) {
+      alert("Грешна парола!");
+      return;
+    }
+
+    await db.collection("inseminations").doc(selectedId).update({
+      worker: newWorker,
+      cowNumber: newCowNumber,
+      type: newType,
+      date: newDate,
+      result: newResult
+    });
+
+    // Актуализиране локално
+    const idx = data.findIndex(r => r.id === selectedId);
+    if (idx > -1) {
+      data[idx] = { id: selectedId, worker: newWorker, cowNumber: newCowNumber, type: newType, date: newDate, result: newResult };
+    }
+
+    alert("Записът е обновен успешно.");
+    populateRecordSelect();
+    updateTables();
+    updateChart();
+    editFormContainer.style.display = "none";
+    recordSelect.value = "";
+  };
+
+  // Зареждаме данните при стартиране
+  loadData();
+}
