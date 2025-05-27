@@ -8,51 +8,31 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
-    body {
-      font-family: sans-serif;
-      padding: 1rem;
-      background-color: #f5f5f5;
-    }
+    body { font-family: sans-serif; padding: 1rem; background-color: #f5f5f5; }
     .hidden { display: none; }
     .login-box {
-      max-width: 300px;
-      margin: 50px auto;
-      padding: 2rem;
-      background: white;
-      border-radius: 10px;
+      max-width: 300px; margin: 50px auto; padding: 2rem;
+      background: white; border-radius: 10px;
       box-shadow: 0 0 10px rgba(0,0,0,0.1);
     }
     .login-box input, .login-box button {
-      width: 100%;
-      margin-bottom: 10px;
-      padding: 0.5rem;
+      width: 100%; margin-bottom: 10px; padding: 0.5rem;
     }
     .section { margin-top: 2rem; }
     table {
-      border-collapse: collapse;
-      width: 100%;
-      margin-top: 1rem;
-      background: white;
+      border-collapse: collapse; width: 100%; margin-top: 1rem; background: white;
     }
     th, td {
-      border: 1px solid #ccc;
-      padding: 0.5rem;
-      text-align: center;
+      border: 1px solid #ccc; padding: 0.5rem; text-align: center;
     }
-    th {
-      background-color: #eee;
-    }
+    th { background-color: #eee; }
     .delete-btn {
-      background-color: #e74c3c;
-      color: white;
-      border: none;
-      padding: 0.3rem 0.6rem;
-      cursor: pointer;
+      background-color: #e74c3c; color: white;
+      border: none; padding: 0.3rem 0.6rem; cursor: pointer;
     }
   </style>
 </head>
 <body>
-  <!-- Форма за вход -->
   <div id="loginSection" class="login-box">
     <h2>Вход</h2>
     <input type="text" id="username" placeholder="Потребителско име" />
@@ -61,368 +41,47 @@
     <p id="loginError" style="color:red;"></p>
   </div>
 
-  <!-- Основна част на сайта -->
   <div id="mainContent" class="hidden">
-    <!-- Форма за добавяне на нов запис -->
-    <div class="section">
-      <h3>Добавяне на осеменяване</h3>
-      <form id="inseminationForm">
-        <label>Осеменител:
-          <select id="worker" required>
-            <option value="ivan">ivan</option>
-            <option value="vasil">vasil</option>
-            <option value="krustyo">krustyo</option>
-            <option value="stela">stela</option>
-          </select>
-        </label><br /><br />
-        <label>Номер на крава:
-          <input type="text" id="cowNumber" required />
-        </label><br /><br />
-        <label>Вид осеменяване:
-          <input type="text" id="type" required />
-        </label><br /><br />
-        <label>Дата:
-          <input type="date" id="date" required />
-        </label><br /><br />
-        <button type="submit">Добави</button>
-      </form>
-    </div>
+    <!-- Основната част на приложението ще бъде тук -->
+    <!-- Ще бъде добавена от скрипта -->
+  </div>
 
-    <!-- Търсене по номер -->
-    <div class="section">
-      <h3>Търсене по номер на крава</h3>
-      <form id="searchForm">
-        <input type="text" id="searchCow" placeholder="Въведи номер на крава" required />
-        <button type="submit">Търси</button>
-      </form>
-      <div id="searchResult" style="margin-top:1rem; display:none;">
-        <p id="foundInfo"></p>
-        <div id="pregnancySection" style="display:none;">
-          <label>Резултат тест бременност:
-            <select id="pregnancyResult">
-              <option value="Няма данни">Няма данни</option>
-              <option value="Положителен">Положителен</option>
-              <option value="Отрицателен">Отрицателен</option>
-            </select>
-          </label>
-          <button id="updateTestBtn">Обнови резултат</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Таблици с данни по осеменители -->
-    <div class="section">
-      <h3>Данни по осеменители</h3>
-      <table id="recordsTable">
-        <thead>
-          <tr>
-            <th>Осеменител</th>
-            <th>Номер на крава</th>
-            <th>Вид</th>
-            <th>Дата</th>
-            <th>Резултат</th>
-            <th>Действия</th>
-          </tr>
-        </thead>
-        <tbody>
-        </tbody>
-      </table>
-      <p id="successRate"></p>
-    </div>
-    <!-- Секция за редакция -->
-    <div class="section">
-      <h3>Редактиране на записи</h3>
-      <label>Избери запис за редакция:
-        <select id="recordSelect">
-          <option value="">-- Избери запис --</option>
-        </select>
-      </label>
-      <div id="editFormContainer" style="margin-top: 1rem; display:none;">
-        <form id="editRecordForm">
-          <label>Осеменител:
-            <select id="editWorker" required>
-              <option value="ivan">ivan</option>
-              <option value="vasil">vasil</option>
-              <option value="krustyo">krustyo</option>
-              <option value="stela">stela</option>
-            </select>
-          </label><br /><br />
-          <label>Номер на крава:
-            <input type="text" id="editCowNumber" required />
-          </label><br /><br />
-          <label>Вид осеменяване:
-            <input type="text" id="editType" required />
-          </label><br /><br />
-          <label>Дата:
-            <input type="date" id="editDate" required />
-          </label><br /><br />
-          <label>Резултат:
-            <select id="editResult">
-              <option value="Няма данни">Няма данни</option>
-              <option value="Положителен">Положителен</option>
-              <option value="Отрицателен">Отрицателен</option>
-            </select>
-          </label><br /><br />
-          <button type="submit">Запази промените</button>
-        </form>
-      </div>
-    </div>
-
-    <!-- Графика -->
-    <div class="section">
-      <h3>Графика на успеваемост</h3>
-      <canvas id="successChart"></canvas>
-    </div>
-
-  </div> <!-- край на mainContent -->
-
-<script>
-  // Конфигурация на Firebase - замени с твоята конфигурация
-  const firebaseConfig = {
-    apiKey: "ТУК_API_KEY",
-    authDomain: "ТУК_PROJECT_ID.firebaseapp.com",
-    projectId: "ТУК_PROJECT_ID",
-    storageBucket: "ТУК_PROJECT_ID.appspot.com",
-    messagingSenderId: "ТУК_SENDER_ID",
-    appId: "ТУК_APP_ID"
-  };
-
-  // Инициализиране на Firebase
-  firebase.initializeApp(firebaseConfig);
-  const db = firebase.firestore();
-
-  // Фиксирани потребители за вход
-  const users = {
-    admin: "admin123",
-    user1: "pass1",
-    user2: "pass2"
-  };
-
-  // Елементи
-  const loginSection = document.getElementById("loginSection");
-  const mainContent = document.getElementById("mainContent");
-  const loginError = document.getElementById("loginError");
-
-  // Проверка за вход
-  function checkLogin() {
-    const username = document.getElementById("username").value.trim();
-    const password = document.getElementById("password").value;
-
-    if (users[username] && users[username] === password) {
-      loginSection.classList.add("hidden");
-      mainContent.classList.remove("hidden");
-      loginError.textContent = "";
-      loadData();
-    } else {
-      loginError.textContent = "Грешно потребителско име или парола.";
-    }
-  }
-
-  let data = [];
-  let chart;
-  const workers = ["ivan", "vasil", "krustyo", "stela"];
-
-  const tableBody = document.querySelector("#recordsTable tbody");
-  const rateEl = document.getElementById("successRate");
-  const recordSelect = document.getElementById("recordSelect");
-  const editFormContainer = document.getElementById("editFormContainer");
-  const editRecordForm = document.getElementById("editRecordForm");
-
-  // Зареждане на данни
-  function loadData() {
-    db.collection("records").get().then(snapshot => {
-      data = [];
-      snapshot.forEach(doc => {
-        data.push({ id: doc.id, ...doc.data() });
-      });
-      updateTables();
-      updateChart();
-      populateRecordSelect();
-    });
-  }
-
-  // Обновяване на таблицата
-  function updateTables() {
-    tableBody.innerHTML = "";
-    let pos = 0, neg = 0;
-
-    data.forEach(record => {
-      const row = document.createElement("tr");
-      row.innerHTML = `
-        <td>${record.worker}</td>
-        <td>${record.cowNumber}</td>
-        <td>${record.type}</td>
-        <td>${record.date}</td>
-        <td>${record.result || "Няма данни"}</td>
-        <td></td>
-      `;
-
-      // Бутон изтриване
-      const delBtn = document.createElement("button");
-      delBtn.textContent = "Изтрий";
-      delBtn.classList.add("delete-btn");
-      delBtn.onclick = () => {
-        if (confirm(`Изтриване на запис за крава ${record.cowNumber}?`)) {
-          db.collection("records").doc(record.id).delete()
-            .then(() => loadData());
-        }
-      };
-
-      row.querySelector("td:last-child").appendChild(delBtn);
-      tableBody.appendChild(row);
-
-      if (record.result === "Положителен") pos++;
-      else if (record.result === "Отрицателен") neg++;
-    });
-
-    const total = pos + neg;
-    if (total > 0) {
-      const rate = (pos / total * 100).toFixed(2);
-      rateEl.textContent = `Успеваемост: ${rate}% (${pos} положителни от ${total})`;
-    } else {
-      rateEl.textContent = "Няма данни за успеваемост.";
-    }
-  }
-
-  // Добавяне на нов запис
-  document.getElementById("inseminationForm").addEventListener("submit", e => {
-    e.preventDefault();
-
-    const newRecord = {
-      worker: document.getElementById("worker").value,
-      cowNumber: document.getElementById("cowNumber").value.trim(),
-      type: document.getElementById("type").value.trim(),
-      date: document.getElementById("date").value,
-      result: "Няма данни"
+  <script>
+    const firebaseConfig = {
+      apiKey: "YOUR_API_KEY",
+      authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+      projectId: "YOUR_PROJECT_ID",
+      storageBucket: "YOUR_PROJECT_ID.appspot.com",
+      messagingSenderId: "YOUR_SENDER_ID",
+      appId: "YOUR_APP_ID"
     };
 
-    db.collection("records").add(newRecord).then(() => {
-      e.target.reset();
-      loadData();
-    });
-  });
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
 
-  // Търсене по номер на крава
-  document.getElementById("searchForm").addEventListener("submit", e => {
-    e.preventDefault();
-    const searchVal = document.getElementById("searchCow").value.trim();
-    const found = data.find(r => r.cowNumber === searchVal);
+    const users = {
+      admin: "admin123",
+      user1: "pass1",
+      user2: "pass2"
+    };
 
-    const foundInfo = document.getElementById("foundInfo");
-    const pregnancySection = document.getElementById("pregnancySection");
-    const pregnancyResult = document.getElementById("pregnancyResult");
+    function checkLogin() {
+      const username = document.getElementById("username").value.trim();
+      const password = document.getElementById("password").value;
 
-    if (found) {
-      foundInfo.textContent = `Запис за крава ${found.cowNumber}: Осеменител - ${found.worker}, Вид - ${found.type}, Дата - ${found.date}, Резултат - ${found.result || "Няма данни"}`;
-      pregnancySection.style.display = "block";
-      pregnancyResult.value = found.result || "Няма данни";
-
-      document.getElementById("updateTestBtn").onclick = () => {
-        db.collection("records").doc(found.id).update({
-          result: pregnancyResult.value
-        }).then(() => {
-          alert("Резултатът е обновен.");
-          loadData();
-        });
-      };
-    } else {
-      foundInfo.textContent = "Няма запис с този номер на крава.";
-      pregnancySection.style.display = "none";
-    }
-  });
-
-  // Попълване на селектора за редакция
-  function populateRecordSelect() {
-    recordSelect.innerHTML = '<option value="">-- Избери запис --</option>';
-    data.forEach(r => {
-      const option = document.createElement("option");
-      option.value = r.id;
-      option.textContent = `${r.cowNumber} (${r.worker}) - ${r.date}`;
-      recordSelect.appendChild(option);
-    });
-  }
-
-  // При избор на запис за редакция
-  recordSelect.addEventListener("change", () => {
-    const id = recordSelect.value;
-    if (!id) {
-      editFormContainer.style.display = "none";
-      return;
-    }
-    const record = data.find(r => r.id === id);
-if (!record) return;
-document.getElementById("editWorker").value = record.worker;
-document.getElementById("editCowNumber").value = record.cowNumber;
-document.getElementById("editType").value = record.type;
-document.getElementById("editDate").value = record.date;
-document.getElementById("editResult").value = record.result || "Няма данни";
-
-editFormContainer.style.display = "block";
-});
-
-// Записване на редакция
-editRecordForm.addEventListener("submit", e => {
-e.preventDefault();
-const id = recordSelect.value;
-if (!id) return;
-const updated = {
-  worker: document.getElementById("editWorker").value,
-  cowNumber: document.getElementById("editCowNumber").value.trim(),
-  type: document.getElementById("editType").value.trim(),
-  date: document.getElementById("editDate").value,
-  result: document.getElementById("editResult").value,
-};
-
-db.collection("records").doc(id).update(updated).then(() => {
-  alert("Записът е обновен.");
-  editFormContainer.style.display = "none";
-  recordSelect.value = "";
-  loadData();
-});
-});
-
-// Графика за успеваемост по осеменители
-function updateChart() {
-const ctx = document.getElementById("successChart").getContext("2d");
-const stats = {};
-workers.forEach(w => stats[w] = { pos: 0, total: 0 });
-
-data.forEach(rec => {
-  if (stats[rec.worker]) {
-    if (rec.result === "Положителен") stats[rec.worker].pos++;
-    if (rec.result === "Положителен" || rec.result === "Отрицателен") stats[rec.worker].total++;
-  }
-});
-
-const labels = workers;
-const rates = workers.map(w => {
-  const s = stats[w];
-  return s.total > 0 ? (s.pos / s.total * 100).toFixed(2) : 0;
-});
-
-if (chart) {
-  chart.data.labels = labels;
-  chart.data.datasets[0].data = rates;
-  chart.update();
-} else {
-  chart = new Chart(ctx, {
-    type: "bar",
-    data: {
-      labels,
-      datasets: [{
-        label: "Успеваемост %",
-        data: rates,
-        backgroundColor: "rgba(75, 192, 192, 0.7)"
-      }]
-    },
-    options: {
-      scales: {
-        y: { beginAtZero: true, max: 100 }
+      if (users[username] && users[username] === password) {
+        document.getElementById("loginSection").classList.add("hidden");
+        document.getElementById("mainContent").classList.remove("hidden");
+        initApp();
+      } else {
+        document.getElementById("loginError").textContent = "Невалидно потребителско име или парола.";
       }
     }
-  });
-}
-}
-</script>
 
-</body> </html> ```
+    function initApp() {
+      document.getElementById("mainContent").innerHTML = '<p>Добре дошли!</p>';
+      // Тук може да се добави цялото съдържание на приложението, формуляри и логика
+    }
+  </script>
+</body>
+</html>
