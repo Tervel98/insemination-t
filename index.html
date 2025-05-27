@@ -96,6 +96,15 @@
         </div>
       </div>
     </div>
+    <!-- Секция за изтриване на крава по номер -->
+    <div class="section">
+      <h2>Изтриване на крава по номер</h2>
+      <form id="deleteForm">
+        <input type="text" id="deleteCowNumber" placeholder="Номер на крава за изтриване" required />
+        <button type="submit">Изтрий</button>
+        <p id="deleteMessage" style="color:green; margin-top: 0.5rem;"></p>
+      </form>
+    </div>
 
     <div class="section">
       <h2>Резултати по осеменители</h2>
@@ -165,7 +174,7 @@
     }
   }
 
-  // Зареждаме данните от Firebase
+  // Зареждане на данни от Firebase
   async function loadData() {
     data = [];
     const snapshot = await db.collection("inseminations").get();
@@ -174,9 +183,8 @@
     });
     updateTables();
   }
-</script>
-<script>
-  // Добавяне нов запис
+
+  // Добавяне на нов запис
   document.getElementById("inseminationForm").addEventListener("submit", async function(e) {
     e.preventDefault();
 
@@ -206,106 +214,123 @@
     const cowNumber = document.getElementById("searchCow").value.trim();
     const found = data.find(r => r.cowNumber === cowNumber);
 
-    const section = document.getElementById("searchResult");
-    const info = document.getElementById("foundInfo");
-    const testSection = document.getElementById("pregnancySection");
+    const searchResult = document.getElementById("searchResult");
+    const foundInfo = document.getElementById("foundInfo");
+    const pregnancySection = document.getElementById("pregnancySection");
+    const pregnancyResult = document.getElementById("pregnancyResult");
 
-    if (found) {
-      section.style.display = "block";
-      info.textContent = `Осеменител: ${found.worker}, Вид: ${found.type}, Дата: ${found.date}, Тест: ${found.result}`;
-      testSection.style.display = "block";
-
-      document.getElementById("updateTestBtn").onclick = async function() {
-        const password = prompt("Въведи парола за промяна:");
-        if (password !== "9802") {
-          alert("Грешна парола!");
-          return;
-        }
-        const newResult = document.getElementById("pregnancyResult").value;
-        found.result = newResult;
-        await db.collection("inseminations").doc(found.id).update({ result: newResult });
-        updateTables();
-        alert("Резултатът е обновен.");
-      };
+    if (!found) {
+      foundInfo.textContent = "Не е намерена крава с този номер.";
+      pregnancySection.style.display = "none";
     } else {
-      section.style.display = "block";
-      info.textContent = "Крава с този номер не е намерена.";
-      testSection.style.display = "none";
+      foundInfo.textContent = `Крава: ${found.cowNumber}, Осеменител: ${found.worker}, Вид: ${found.type}, Дата: ${found.date}`;
+      pregnancySection.style.display = "block";
+      pregnancyResult.value = found.result || "Няма данни";
+    }
+    searchResult.style.display = "block";
+  });
+
+  // Обновяване на резултат тест бременност
+  document.getElementById("updateTestBtn").addEventListener("click", async function() {
+    const cowNumber = document.getElementById("searchCow").value.trim();
+    const found = data.find(r => r.cowNumber === cowNumber);
+    if (!found) return;
+
+    const newResult = document.getElementById("pregnancyResult").value;
+
+    try {
+      await db.collection("inseminations").doc(found.id).update({ result: newResult });
+      found.result = newResult;
+      updateTables();
+      alert("Резултатът беше обновен успешно.");
+    } catch (error) {
+      alert("Грешка при обновяване.");
+      console.error(error);
     }
   });
 
   // Обновяване на таблиците и графиката
   function updateTables() {
     const workers = ["ivan", "vasil", "krustyo", "stela"];
-    const labels = [], success = [], fail = [];
-
     workers.forEach(worker => {
-      const table = document.getElementById("table-" + worker);
-      const rate = document.getElementById("rate-" + worker);
+      const table = document.getElementById(`table-${worker}`);
+      // Изчистваме всички редове освен първия (заглавията)
+      table.querySelectorAll("tr:not(:first-child)").forEach(tr => tr.remove());
 
-      // Почистваме таблицата (освен заглавния ред)
-      while (table.rows.length > 1) {
-        table.deleteRow(1);
-      }
-
-      const filtered = data.filter(r => r.worker === worker);
-      let pos = 0, neg = 0;
+      const filtered = data.filter(d => d.worker === worker);
 
       filtered.forEach(record => {
-        const row = table.insertRow();
-
-        row.insertCell(0).textContent = record.cowNumber;
-        row.insertCell(1).textContent = record.type;
-        row.insertCell(2).textContent = record.date;
-        row.insertCell(3).textContent = record.result;
-
-        // Бутон за изтриване с парола
-        const delBtn = document.createElement("button");
-        delBtn.textContent = "Изтрий";
-        delBtn.className = "delete-btn";
-
-        delBtn.onclick = async () => {
-          const password = prompt("Въведи парола за изтриване:");
-          if (password !== "9802") {
-            alert("Грешна парола!");
-            return;
-          }
-          await db.collection("inseminations").doc(record.id).delete();
-          const idx = data.findIndex(d => d.id === record.id);
-          if (idx > -1) data.splice(idx, 1);
-          updateTables();
-        };
-
-        const delCell = row.insertCell(4);
-        delCell.appendChild(delBtn);
-
-        if (record.result === "Положителен") pos++;
-        else if (record.result === "Отрицателен") neg++;
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${record.cowNumber}</td>
+          <td>${record.type}</td>
+          <td>${record.date}</td>
+          <td>${record.result || "Няма данни"}</td>
+          <td><button class="delete-btn" data-id="${record.id}">Изтрий</button></td>
+        `;
+        table.appendChild(tr);
       });
+    });
 
-      const total = pos + neg;
-      const successRate = total > 0 ? ((pos / total) * 100).toFixed(1) : 0;
-      rate.textContent = `Успеваемост: ${successRate}%`;
+    // Добавяме събитие за изтриване към бутоните
+    document.querySelectorAll(".delete-btn").forEach(btn => {
+      btn.onclick = async function() {
+        if (!confirm("Сигурни ли сте, че искате да изтриете този запис?")) return;
 
-      labels.push(worker);
-      success.push(successRate);
-      fail.push((100 - successRate).toFixed(1));
+        const password = prompt("Въведи парола за изтриване:");
+        if (password !== "9802") {
+          alert("Грешна парола!");
+          return;
+        }
+
+        try {
+          await db.collection("inseminations").doc(btn.dataset.id).delete();
+          data = data.filter(d => d.id !== btn.dataset.id);
+          updateTables();
+        } catch (error) {
+          alert("Грешка при изтриване.");
+          console.error(error);
+        }
+      };
+    });
+
+    updateSuccessChart();
+  }
+
+  // Графика за успеваемост
+  function updateSuccessChart() {
+    const workers = ["ivan", "vasil", "krustyo", "stela"];
+    const successRates = workers.map(worker => {
+      const filtered = data.filter(d => d.worker === worker);
+      const total = filtered.length;
+      if (total === 0) return 0;
+      const success = filtered.filter(d => d.result === "Положителен").length;
+      // Обновяване на процентния текст над таблицата
+      const rateSpan = document.getElementById(`rate-${worker}`);
+      rateSpan.textContent = total ? ` - Успеваемост: ${((success/total)*100).toFixed(1)}%` : "";
+      return total ? (success / total) * 100 : 0;
     });
 
     if (chart) chart.destroy();
 
-    chart = new Chart(document.getElementById("successChart"), {
+    const ctx = document.getElementById("successChart").getContext("2d");
+    chart = new Chart(ctx, {
       type: "bar",
       data: {
-        labels,
-        datasets: [
-          { label: "Успеваемост (%)", backgroundColor: "#4caf50", data: success },
-          { label: "Неуспеваемост (%)", backgroundColor: "#e74c3c", data: fail }
-        ]
+        labels: workers,
+        datasets: [{
+          label: "Процент успеваемост (%)",
+          data: successRates,
+          backgroundColor: ["#3498db", "#2ecc71", "#e67e22", "#9b59b6"]
+        }]
       },
       options: {
-        responsive: true,
-        scales: { y: { beginAtZero: true, max: 100 } }
+        scales: {
+          y: {
+            beginAtZero: true,
+            max: 100
+          }
+        }
       }
     });
   }
